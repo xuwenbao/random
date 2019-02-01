@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-svc
+  labels:
+    app: simple
+    component: webserver
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app: simple
+    component: webserver
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple
+  labels:
+    app: simple
+    component: webserver
+spec:
+  selector:
+    matchLabels:
+      app: simple
+      component: webserver
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: simple
+        component: webserver
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+      - name: simple
+        # 正式使用请勿使用“latest"标签，见：https://kubernetes.io/docs/concepts/configuration/overview/#container-images
+        image: registry.cn-hangzhou.aliyuncs.com/xuwenbao/simple:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: VERSION
+          value: v1.0.0
+      # livenessProbe:
+      #   httpGet:
+      #     path: /live
+      #     port: probe
+      #   initialDelaySeconds: 5
+      #   periodSeconds: 5
+      # readinessProbe:
+      #   httpGet:
+      #     path: /ready
+      #     port: probe
+      #   periodSeconds: 5
